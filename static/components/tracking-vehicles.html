@@ -74,7 +74,6 @@
         </paper-material>
       </template>
     </div>
-<!-- class="card-vehicle-id" contenteditable="false" -->
     <paper-material class="vehicle-form">
       <h1> New Vehicle </h1>
       <form is="iron-form" id="vehicleForm" content-type="application/json" method="post" action="/vehicles/create">
@@ -108,8 +107,10 @@
       editVehicle: function(e) {
         var model = e.model;
         var vehicle = model.vehicle;
-        var element = document.getElementById(vehicle.vehicleName);
-        element.contentEditable = true;
+        this.vehicle.vehicleID = 'asbasdf';
+        this.notifyPath('vehicle.vehicleID');
+        // var element = document.getElementById(vehicle.vehicleName);
+        // element.contentEditable = true;
       },
       deleteVehicle: function(e) {
         this.splice('vehicles', e.model.index, 1);
