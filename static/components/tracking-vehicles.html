@@ -107,13 +107,15 @@
       editVehicle: function(e) {
         var model = e.model;
         var vehicle = model.vehicle;
-        this.vehicle.vehicleID = 'asbasdf';
-        this.notifyPath('vehicle.vehicleID');
-        // var element = document.getElementById(vehicle.vehicleName);
-        // element.contentEditable = true;
+        // this.vehicle.vehicleID = 'asbasdf';
+        // this.notifyPath('vehicle.vehicleID');
+        var element = document.getElementById(vehicle.vehicleName);
+        element.contentEditable = true;
       },
       deleteVehicle: function(e) {
-        this.splice('vehicles', e.model.index, 1);
+        var id = e.model.vehicle.vehicleID;
+        this.$.ajaxDelete.url = "/vehicles/"+id;
+        this.$.ajaxDelete.generateRequest();
       }
     });
 

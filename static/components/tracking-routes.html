@@ -41,6 +41,8 @@
       last-response="{{routes}}">
     </iron-ajax>
 
+    <iron-ajax id="ajaxDelete" method="DELETE" on-response="addRouteResponse"></iron-ajax>
+
     <template is="dom-if" if="{{routes}}">
       <paper-material class="routes-container">
         <h1> Routes </h1>
@@ -157,7 +159,10 @@
 
       },
       deleteRoute: function(e) {
-        this.splice('routes', e.model.index, 1);
+        // this.splice('routes', e.model.index, 1);
+        var id = e.model.route.id;
+        this.$.ajaxDelete.url = '/routes/' + id;
+        this.$.ajaxDelete.generateRequest();
       }
     });
 
