@@ -262,7 +262,15 @@
         }
       }
     });
+
+      clearStops: function(stops) {
+        for (i = 0; i < stops.length; i++) {
+          stops[i].setMap(null);
+        }
+        stops = [];
+      },
   </script>
+
   <script>
     // select the first page when site is loaded
     document.addEventListener('WebComponentsReady', function () {
