@@ -4,46 +4,9 @@
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="stylesheet" type="text/css" href="../css/tracking-vehicles.css">
 
 <dom-module id="tracking-vehicles">
-  <style>
-    .vehicle-form {
-      margin: 25px;
-      padding: 20px;
-      background: #ffffff;
-    }
-    .vehicle-form paper-button {
-      background: #3f51b5;
-      color: white;
-    }
-    .vehicle-edit {
-      margin: 25px;
-      padding: 20px;
-      background: #ffffff;
-    }
-    .vehicle-edit paper-button {
-      background: #3f51b5;
-      color: white;
-    }
-    .vehicle-card {
-      margin: 5px;
-    }
-    .vehicle-list h1 {
-      margin-left: 15px;
-    }
-    .vehicle-list .vehicle-card {
-      margin-left: 15px;
-    }
-    .vehicle-action {
-      --iron-icon-height: 20px;
-      --iron-icon-width: 20px;
-    }
-    .vehicles-container {
-      margin: 25px;
-      padding: 10px;
-      background: #ffffff;
-    }
-  </style>
 
   <template>
     <iron-ajax
@@ -54,16 +17,17 @@
       last-response="{{vehicles}}">
     </iron-ajax>
 
-    <iron-ajax id="ajaxDelete" method="DELETE" on-response="addVehicleResponse"></iron-ajax>
+    <iron-ajax id="ajaxDelete" method="DELETE"></iron-ajax>
 
     <div class="vehicle-list">
       <template is="dom-if" if="{{vehicles}}">
         <paper-material class="vehicles-container">
           <h1> Vehicles </h1>
           <template is="dom-repeat" items="{{vehicles}}" as="vehicle">
-            <paper-card class="vehicle-card" heading="{{vehicle.vehicleName}}" elevation="2" contenteditable="false">
+            <paper-card  class="vehicle-card" elevation="2" contenteditable="false">
               <div class="card-content">
-                <b> ID: </b> <span id$="{{vehicle.vehicleName}}">{{vehicle.vehicleID}}</span>
+                <font size="+2"> <span id$="{{vehicle.vehicleName}}">{{vehicle.vehicleName}}</font></br></br></br>
+                <b> ID: </b> <span id$="{{vehicle.vehicleID}}">{{vehicle.vehicleID}}</span>
               </div>
               <div class="card-actions">
                 <paper-icon-button on-click="editVehicle" icon="create" class="create"></paper-icon-button>
@@ -109,22 +73,36 @@
         var vehicle = model.vehicle;
         // this.vehicle.vehicleID = 'asbasdf';
         // this.notifyPath('vehicle.vehicleID');
-        var element = document.getElementById(vehicle.vehicleName);
-        element.contentEditable = true;
+        var nameElement = document.getElementById(vehicle.vehicleName);
+        var idElement = document.getElementById(vehicle.vehicleID);
+        if (!idElement.isContentEditable) {
+          nameElement.contentEditable = true;
+          idElement.contentEditable = true;
+        } else {
+          nameElement.contentEditable = false;
+          idElement.contentEditable = false;
+          this.$.ajaxDelete.url = "/vehicles/"+vehicle.vehicleID;
+          this.$.ajaxDelete.generateRequest();
+          var newVehicle = {};
+          newVehicle["vehicleID"] = idElement.innerHTML;
+          newVehicle["vehicleName"] = nameElement.textContent;
+          var nvString = JSON.stringify(newVehicle);
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST","/vehicles/create", true);
+          xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+          xhr.send(nvString);
+          this.$.updateVehicles.generateRequest();
+        }
       },
       deleteVehicle: function(e) {
         var id = e.model.vehicle.vehicleID;
         this.$.ajaxDelete.url = "/vehicles/"+id;
         this.$.ajaxDelete.generateRequest();
+        this.$.updateVehicles.generateRequest();
       }
     });
 
     function submitVehicle() {
-      var form = document.getElementById("vehicleForm");
-      form.submit();
-      form.reset();
-    }
-    function submitEdits() {
       var form = document.getElementById("vehicleForm");
       form.submit();
       form.reset();
