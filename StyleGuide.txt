@@ -1,0 +1,20 @@
+Shuttle Tracking v2 project should follow the following style guidelines:
+
+General
+1. Indentation are two spaces instead of tabs.
+2. Brackets does not occupy a new line.
+3. One space between statement and brackets
+4. One line of space between each functions
+5. No extra empty lines allowed
+
+GO language
+1. CamelCase for all function names
+2. lowercase for all variable names
+3. // One line comments like this
+
+HTML language
+1. camelCase for all function names
+2. lowercase for all variable names
+
+CSS
+1. One line of space between each elements
