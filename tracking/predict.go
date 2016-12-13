@@ -1,17 +1,61 @@
 package tracking
 
-// Arrival Time serving what's the time to next N stops for one shuttle
 import (
+	"bytes"
 	"fmt"
 	"math"
-
 	"strconv"
 
-	"bytes"
+	"log"
 
+	"golang.org/x/net/context"
+	maps "googlemaps.github.io/maps"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
+
+type Segment struct {
+	ID       string  `json:"id"`
+	Distance float64 `json:"distance"`
+	Duration float64 `json:"duration"`
+}
+
+// Coord2LatLng converts Coord to LatLng in Google Map API
+func Coord2LatLng(coord *Coord) maps.LatLng {
+	return maps.LatLng{coord.Lat, coord.Lng}
+}
+
+// LatLng2Coord converts LatLng to Coord
+func LatLng2Coord(latlng *maps.LatLng) Coord {
+	return Coord{latlng.Lat, latlng.Lng}
+}
+
+// Interpolate do interpolation using user input coordinates
+func (App *App) Interpolate(coords []Coord, key string) []Coord {
+	var a []maps.LatLng
+	var out []Coord
+	// Make Request
+	for _, coord := range coords {
+		a = append(a, Coord2LatLng(&coord))
+	}
+	if len(coords) > 1 {
+		a = append(a, Coord2LatLng(&coords[0]))
+	}
+	req := &maps.SnapToRoadRequest{a, true}
+	res, err := App.GoogleMapClient.SnapToRoad(context.Background(), req)
+	// Deal with Response
+	if err != nil {
+		log.Fatalf("Fatal Error in Predict.Interpolate:%s", err.Error())
+	}
+	for _, point := range res.SnappedPoints {
+		out = append(out, LatLng2Coord(&point.Location))
+	}
+	return out
+}
+
+func (App *App) GoogleSegmentCompute() Segment {
+
+}
 
 // GetArrivalTime is experimental
 func GetArrivalTime(update *VehicleUpdate, routes *mgo.Collection, stops *mgo.Collection) string {
@@ -34,14 +78,12 @@ func GetArrivalTime(update *VehicleUpdate, routes *mgo.Collection, stops *mgo.Co
 			y1 := route.Duration[i].Start.Longitude
 			x2 := route.Duration[i].End.Latitude
 			y2 := route.Duration[i].End.Longitude
-			// compute the distance between a point and a line
 			length := math.Abs((x2-x1)*(y1-y0)-(x1-x0)*(y2-y1)) / math.Sqrt(math.Pow(x2-x1, 2)+math.Pow(y2-y1, 2))
 			if length < minimumLen {
 				minimumLen = length
 				ShuttleSegment = i
 			}
 		}
-		// when shuttle segment is not found, return N/A
 		if ShuttleSegment >= 0 && ShuttleSegment < len(route.Duration) {
 			fmt.Printf("ID = %s, Segment = %d (%f, %f), duration = %f\n", update.VehicleID, ShuttleSegment, route.Duration[ShuttleSegment].Start.Latitude, route.Duration[ShuttleSegment].Start.Longitude, route.Duration[ShuttleSegment].Duration)
 		}
