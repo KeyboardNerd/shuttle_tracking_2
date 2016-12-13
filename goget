@@ -2,3 +2,5 @@ go get github.com/Sirupsen/logrus
 go get github.com/gorilla/mux
 go get gopkg.in/mgo.v2
 go get gopkg.in/mgo.v2/bson
+go get googlemaps.github.io/maps
+go get github.com/kpawlik/geojson
