@@ -15,7 +15,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-//  represents a single position observed for a Vehicle from the data feed.
+// VehicleUpdate represents a single position observed for a Vehicle from the data feed.
 type VehicleUpdate struct {
 	VehicleID string    `json:"vehicleID"   bson:"vehicleID,omitempty"`
 	Lat       string    `json:"lat"         bson:"lat"`
@@ -54,8 +54,7 @@ var (
 	dataNames = dataRe.SubexpNames()
 )
 
-// UpdateShuttles send a request to iTrak API, gets updated shuttle info, and
-// finally store updated records in db.
+// UpdateShuttles send a request to iTrak API, gets updated shuttle info, and finally store updated records in db.
 func (App *App) UpdateShuttles(dataFeed string, updateInterval int) {
 	var st time.Duration
 	for {
@@ -87,7 +86,6 @@ func (App *App) UpdateShuttles(dataFeed string, updateInterval int) {
 		delim := "eof"
 		// split the body of response by delimiter
 		vehiclesData := strings.Split(string(body), delim)
-		// BUG: if the request fails, it will give undefined result
 
 		// TODO: Figure out if this handles == 1 vehicle correctly or always assumes > 1.
 		if len(vehiclesData) <= 1 {
@@ -105,8 +103,6 @@ func (App *App) UpdateShuttles(dataFeed string, updateInterval int) {
 			}
 
 			// Create new vehicle update & insert update into database
-			// add computation of segment that the shuttle resides on and the arrival time to next N stops [here]
-
 			update := VehicleUpdate{
 				VehicleID: strings.Replace(result["id"], "Vehicle ID:", "", -1),
 				Lat:       strings.Replace(result["lat"], "lat:", "", -1),
@@ -124,7 +120,6 @@ func (App *App) UpdateShuttles(dataFeed string, updateInterval int) {
 			} else {
 				updated++
 			}
-			// here if parsing error, updated will be incremented, wait, the whole thing will crash, isn't it?
 		}
 		log.Infof("sucessfully updated %d/%d vehicles", updated, len(vehiclesData)-1)
 	}
@@ -161,12 +156,25 @@ func (App *App) VehiclesCreateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	WriteJSON(w, vehicle)
 }
 
+// VehiclesEditHandler edit an existing vehicle in the database, accepting PUT request
 func (App *App) VehiclesEditHandler(w http.ResponseWriter, r *http.Request) {
-
+	var v Vehicle
+	e := json.NewDecoder(r.Body).Decode(&v)
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	v.Updated = time.Now()
+	e = App.Vehicles.UpdateId(v.VehicleID, v)
+	if e != nil {
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+	WriteJSON(w, v)
 }
 
+// VehiclesDeleteHandler handles DELETE request and remove an item specified by id in request
 func (App *App) VehiclesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete vehicle from Vehicles collection
 	vars := mux.Vars(r)
@@ -178,7 +186,6 @@ func (App *App) VehiclesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Here's my view, keep every name the same meaning, otherwise, choose another.
 // UpdatesHandler get the most recent update for each vehicle in the vehicles collection.
 func (App *App) UpdatesHandler(w http.ResponseWriter, r *http.Request) {
 	// Store updates for each vehicle
